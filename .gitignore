@@ -1,0 +1,45 @@
+# ---- Datos (no se versionan: ver el README de cada proyecto) ----
+data/itineraries.csv
+data/*.parquet/
+data/corredor.parquet/
+data/dataset_modelado.parquet/
+flight-price-drop-prediction/data/
+abusive-language-detection/data/
+abusive-language-detection/models/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+*.egg-info/
+
+# ---- Spark / Hadoop ----
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+_SUCCESS
+
+# ---- Julia ----
+Manifest.toml
+
+# ---- LaTeX ----
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# ---- Sistema / editores ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

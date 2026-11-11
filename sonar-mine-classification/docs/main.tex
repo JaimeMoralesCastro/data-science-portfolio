@@ -1,0 +1,523 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc} 
+\usepackage[spanish]{babel} 
+\usepackage{graphicx} 
+\usepackage{hyperref}
+\usepackage{amsmath} 
+\usepackage{caption} 
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{cite}
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry}
+\setlength{\parskip}{6pt}
+
+\usepackage{tablefootnote}
+
+\begin{document}
+
+\definecolor{rosa}{RGB}{177,0,114}
+\definecolor{gris}{RGB}{100,100,100}
+
+\begin{titlepage} 
+\vspace*{30pt}
+ 
+\includegraphics[scale=0.30]{images/udc}\\[10pt]
+  \hspace*{18pt}\textcolor{rosa}{{\fontencoding{T1}\fontfamily{phv}\selectfont Facultade de Informática}}\\[5pt]
+  \hspace*{18pt}\textcolor{gris}{{\fontencoding{T1}\fontfamily{phv}\selectfont Grao en Ciencia e Enxeñaría de Datos}}\\[5pt]
+
+\centering \vspace*{3cm}
+
+{\Large\bfseries Aprendizaje Automático I \par}
+\vspace{1cm}
+{\Large Sonar - Clasificación de Minas y Rocas\\ 
+    \normalsize (UCI Machine Learning Repository) \par}
+
+\vspace{2.5cm}
+{\Large Nicolás Pernas Gómez \par}
+
+\vfill
+
+\begin{flushright}
+    \large \today
+\end{flushright}
+\end{titlepage}
+
+% Índice 
+\tableofcontents 
+\newpage
+% Introducción
+\section{Introducción} \label{sec:introducción}
+La detección de minas submarinas mediante sonar es una de las áreas más críticas de la tecnología marítima moderna. Tiene su origen durante la Primera Guerra Mundial, cuando las primeras versiones comenzaron a utilizarse para detectar submarinos enemigos. Sin embargo, no fue hasta mediados del siglo XX que estas tecnologías comenzaron a adaptarse a los nuevos tiempos: la localización de minas navales(minas submarinas), que habían tenido un impacto notable en rutas comerciales y estaban poniendo en peligro las localidades costeras.
+
+En la actualidad, la seguridad marítima sigue siendo una prioridad estratégica para gobiernos y empresas, ya que las minas se siguen considerando una amenaza para todo tipo de embarcaciones. Hoy en día, entre sus aplicaciones están la exploración oceanográfica, la arqueología marina, la pesca industrial, la vigilancia medioambiental o la inspección de infraestructuras como cables de comunicaciones, permitiendo desarrollar técnicas cada vez más precisas debido a la variedad de usos. 
+
+Uno de los grandes desafíos del campo es la interpretación automática de las señales, ya que los ecos de minas y rocas son a menudo extremadamente similares. Mientras que un operador humano puede cometer errores por cansancio o por limitaciones propias, los sistemas basados en aprendizaje automático ofrecen una alternativa que mejora la efectividad. Desde los trabajos pioneros de Gorman y Sejnowski (1988)\cite{gorman1988}, que aplicaron redes neuronales al conjunto de datos Sonar, hasta las transformaciones de series temporales en imágenes, los avances han permitido mejoras significativas en precisión y velocidad de procesamiento.
+
+El presente trabajo aborda la clasificación automática de objetos submarinos, utilizando modelos supervisados aplicados al conjunto de datos Sonar. Este dataset representa un entorno ideal para evaluar modelos como redes neuronales artificiales o árboles de decisión. A través del análisis de métricas como precisión o F1-score, se busca no solo maximizar el rendimiento predictivo, sino también comprender patrones que nos permitan diferenciar objetos peligrosos de inofensivos, optimizando así la toma de decisiones en contextos donde la seguridad es prioritarias.
+\\
+\begin{figure}[hp!] % opciones de forzar lo má arriba posible (h) y que forme un párrafo(p)
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/explosion-mina-submarina.jpg}
+  \caption{ Explosión causada por una mina submarina. 
+            \href{https://www.vistaalmar.es/ciencia-tecnologia/historia/7705-detono-enorme-tormenta-solar-minas-submarinas-guerra-vietnam.html}{Fuente}}
+  \label{fig:ejemplo}
+\end{figure}
+
+% Estudio de la cuestión
+\newpage
+\section{Descripción del problema} 
+La base de datos Sonar contiene mediciones de la reflexión de señales acústicas emitidas por un sistema de sonar activo sobre dos tipos de objetos sumergidos: minas submarinas y rocas. Cada registro corresponde a una emisión de sonar y sus retornos en 60 bandas de frecuencia distintas, cuyos valores están en el rango [0,1]. 
+El objetivo principal es clasificar automáticamente los objetos submarinos como mina (M) o roca (R) a partir de los patrones de retorno. Este es un problema clásico de clasificación binaria, con aplicaciones relevantes en seguridad marítima y exploración oceánica. La base de datos incluye 208 observaciones, distribuidas en::
+\begin{itemize}
+    \item M (Mina): 111 muestras (53.4\%) 
+    \item R (Roca): 97 muestras (46.6\%) 
+\end{itemize}
+Esta distribución, relativamente balanceada, se representa en la siguiente gráfica:
+\begin{figure}[hp!] % opciones de forzar lo má arriba posible (h) y que forme un párrafo(p)
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/barplot.png}
+  \caption{Distribución de clases: minas y rocas en Sonar}
+  \label{fig:ejemplo}
+\end{figure}
+
+Si analizamos la media y la desviación estándar de las amplitudes en las 60 frecuencias para cada clase, observamos diferencias notables entre los patrones acústicos de minas y rocas, como se muestra a continuación:
+\\
+\begin{figure}[hp!] % opciones de forzar lo má arriba posible (h) y que forme un párrafo(p)
+  \centering
+  \includegraphics[width=0.75\textwidth]{images/mediassd.png}
+  \caption{Media y desviación estándar por frecuencia y clase}
+  \label{fig:ejemplo}
+\end{figure}
+\newpage
+La base de datos no contiene valores nulos, y todas las variables están normalizadas, lo que facilita su uso directo en algoritmos de aprendizaje automático sin preprocesamientos adicionales. El problema presenta altas implicaciones operativas, ya que los errores de clasificación pueden tener consecuencias críticas:
+\begin{itemize}
+    \item Falsos negativos (FN): No detectar una mina → consecuencias críticas 
+    \item Falsos positivos (FP): Confundir una roca con una mina → falsa alarma, pérdida de recursos 
+\end{itemize}
+Por tanto, además de la precisión global, es esencial considerar métricas que reflejen el impacto diferencial de cada tipo de error, como la sensibilidad y la especificidad.
+
+\section{Análisis Bibliográfico}
+La comprensión del conjunto de datos Sonar representa el punto de partida ideal para su aplicación en el ámbito del aprendizaje automático. A través de su análisis, podemos reconocer la abundante información que proporcionan las señales registradas, así como el equilibrio adecuado entre las clases objetivo. Esto lo convierte en un recurso adecuado e interesante para experimentos de clasificación binaria. Estas características no solo facilitan una interpretación más clara de los resultados obtenidos, sino que también posibilita establecer conexiones significativas entre los datos originales y los avances alcanzados en investigaciones recientes.
+
+Con esta base, resulta pertinente examinar el contexto histórico y científico en el que surgió esta base de datos, así como las distintas estrategias que se han desarrollado para optimizar su aprovechamiento en tareas de clasificación a lo largo de los años.
+
+Este análisis, llevado a cabo en 1988 por R. P. Gorman y T. J. Sejnowski, marcó un punto de inflexión en el uso de redes neuronales para el procesamiento de señales sonoras, y se transformó en uno de los primeros exitos en el ámbito de la clasificación de objetos submarinos. Es verdad que el área ha progresado significativamente desde esta investigación, pero este trabajo continúa siendo pertinente dado que estableció los fundamentos conceptuales y metodológicos para estudios futuros. Este método brindó un fundamento sólido para desarrollar modelos de aprendizaje automático que pudieran reconocer y categorizar estos patrones acústicos con una alta exactitud. \cite{gorman1988}
+
+Dos décadas despúes, en el 2008, Burcu Erkmen y Tülay Yildirim trataron el asunto de la categorización automática de minas submarinas en aguas poco profundas a través de redes neuronales de regresión general (GRNN) y el análisis de componentes principales (PCA) combinados. Frente a las restricciones del análisis manual realizado por especialistas, que es monótono y susceptible a fallos, su propuesta logró incrementar notablemente la exactitud al disminuir la dimensión del problema sin renunciar a datos significativos. El estudio se llevó a cabo mediante curvas ROC, lo que facilitó una evaluación sólida de la sensibilidad y especificidad del modelo. Los hallazgos evidenciaron que la mezcla de PCA y GRNN no solo aumentó la tasa de clasificación adecuada, sino que también disminuyó el gasto computacional. Esto constituye un progreso significativo en comparación con los métodos anteriores, centrados únicamente en redes neuronales básicas. \cite{erkmen2008}
+
+En 2012, Hao Fu y Guoping Qiu presentaron un avance metodológico significativo mediante la sincronización de histogramas entre kernels, utilizada para optimizar la mezcla de características en problemas de clasificación, incluyendo señales sonoras. A diferencia de técnicas convencionales que solo ajustan media y varianza, su metodología normaliza la distribución total de los kernels a una forma canónica habitual, antes de implementar técnicas de aprendizaje como el Multiple Kernel Learning (MKL). Al llevar a cabo su propuesta en el conjunto, consiguieron avances, aunque modestos, en la exactitud (pasando del 88.0\% al 88.2\%) y una disminución en la norma del hiperplano, lo que señala modelos más coherentes. Este trabajo enfatiza que incluso los progresos metodológicos generales, no específicos para el sonar, pueden influir de manera positiva en este de estudio. \cite{fu2012}
+
+\newpage
+Dos años más tarde, en el 2016, Baida’a Abdul-Qader llevó a cabo una profunda comparación entre tres métodos de aprendizaje supervisado: las redes neuronales artificiales (RNA), los sistemas de inferencia neuro-difuso adaptativo (ANFIS) y los k-vecinos más cercanos (kNN), todos ellos aplicados al conjunto Sonar. Además de analizar los modelos utilizando las 60 características originales del dataset, implementó un proceso de selección secuencial de características (SFS), consiguiendo disminuirlos a los 50 más adecuados. Esta elección no solo incrementó la habilidad predictiva de los clasificadores, sino que redujo significativamente el tiempo de entrenamiento, particularmente en modelos como kNN, que a menudo tienen una alta sensibilidad a la dimensionalidad. Este trabajo destaca la relevancia de los métodos de preprocesamiento y elección, tanto de variables como de componentes para mejorar el desempeño de los sistemas de clasificación. \cite{abdulqader2016}
+
+En el 2019, Khishe y Mosavi presentaron el algoritmo bioinspirado Whale Trainer, para entrenar redes neuronales utilizadas en la clasificación de datos sonar. Este algoritmo, inspirado en la conducta social de las ballenas, contribuyó a superar los problemas habituales de mínimos locales durante el entrenamiento, logrando tasas de clasificación superiores y una mayor habilidad para generalizar ante el ruido. Además, aplicaron perceptrones multicapa entrenados con el algoritmo Salp Swarm, inspirado en el movimiento colectivo de los salpas marinas, logrando una reducción significativa en los errores de clasificación y una aceleración de la convergencia.\cite{khishe2019whale} \cite{khishe2019salp}
+
+Ese mismo año, Wang et al. propusieron una red neuronal convolucional (CNN) que utilizaba pesos adaptativos para clasificar imágenes sonar. Esta arquitectura permitió una mejor representación espacial de los datos, que superaba a las CNN tradicionales tanto en precisión como en robustez. \cite{wang2019}
+
+En 2021, Aybüke Civrizoğlu Buz, Mustafa Umut Demirezen y Uraz Yavanoğlu propusieron un enfoque disruptivo: transformar las señales sonar en imágenes usando Gramian Angular Field (GAF), Markov Transition Field (MTF) y Recurrence Plot (RP). Estas técnicas permiten convertir series temporales en representaciones visuales que contienen relaciones angulares, probabilidades de transición y patrones de repetición, respectivamente. Al combinar estas imágenes como canales rojos, verdes y azules en una única imagen RGB, fueron capaces de entrenar una CNN que alcanzó un 97.60\% de precisión, superando ampliamente a modelos como SVM o k-NN. Este estudio demuestra el enorme potencial de aplicar visión por computador al análisis de señales, abriendo nuevas posibilidades.\cite{civrizoglu2021} En paralelo, Manonmani et al. exploraron ese año técnicas clásicas de visión por computador, como Histogram of Oriented Gradients (HOG) y el detector de bordes de Canny, mostrando que, aunque fueran más simples, seguían siendo útiles como herramientas de preprocesamiento para reducir falsos positivos y mejorar la eficiencia en etapas posteriores. \cite{manonmani2021}
+
+Al año siguiente, Vilas-Bôas Silveira et al. examinaron el uso de redes multicapa (MLP) aplicadas al reconocimiento de objetos submarinos, realizando experimentos tanto con datos sintéticos como reales. A pesar de la creciente tendencia hacia modelos más complejos como CNNs y redes bioinspiradas, los autores demostraron que los MLP, bien calibrados, pueden competir en precisión en contextos donde la eficiencia computacional es crucial. \cite{vilas2022}
+
+Los últimos avances sonados, en 2023, fueron cuando Mousavipour y Mosavi desarrollaron un modelo híbrido combinando los algoritmos Dragonfly y Chimp Optimization para entrenar redes neuronales aplicadas a datos sonar. Este enfoque permitió mejorar notablemente tanto la precisión de clasificación como la estabilidad durante el entrenamiento, también realizado con técnicas bioinspiradas.\cite{mousavipour2023} Ese mismo año, Sitha et al. propusieron un enfoque de aprendizaje automático que integra algoritmos supervisados con preprocesamiento especializado, logrando reducir la tasa de falsos positivos y mejorar la precisión global. Este trabajo recalca la importancia del preprocesamiento, mostrando que incluso los mejores algoritmos pueden beneficiarse de una etapa previa bien diseñada para potenciar su desempeño, como ya pudimos apreciar en otros estudios ya mencionados anteriormente. \cite{sitha2023}
+
+\newpage
+\section{Desarrollo}
+    \subsection*{Entrenamiento y ajuste del modelo}
+    Una vez preparados los datos, se procede a la fase de entrenamiento y ajuste de los modelos. Durante esta etapa, se seleccionan los algoritmos de aprendizaje automático y se entrenan utilizando el conjunto de datos Sonar preprocesado. Los modelos ajustan sus parámetros internos para capturar las relaciones entre las características de entrada (las 60 frecuencias) y la variable objetivo (mina o roca).
+    En este caso, hemos trabajado con cinco algoritmos diferentes:
+    \begin{itemize}
+    \item Redes Neuronales Artificiales (RNA)
+    \item Máquinas de Soporte Vectorial (SVM)
+    \item Estimación de Modelos de Decisión (DoME)
+    \item Árboles de decisión
+    \item Algoritmo de k-vecinos (kNN)
+    \end{itemize}
+    
+    El conjunto de entrenamiento incluye 208 muestras, de las cuales 111 corresponden a minas (53,4\%) y 97 a rocas (46,6\%), lo que constituye una base de datos relativamente balanceada. Esta distribución permite que los modelos puedan aprender de ambas clases sin sesgo notable hacia una de ellas.
+    \\
+    \begin{figure}[hp!] % opciones de forzar lo má arriba posible (h) y que forme un párrafo(p)
+      \centering
+      \includegraphics[width=0.85\textwidth]{images/boxplots.png}
+      \caption{: Diagrama de cajas de la distribución de normalidad del conjunto de datos.}
+      \label{fig:ejemplo}
+    \end{figure}
+    \\
+    Cada uno de los atributos representa la intensidad  medida en una de las 60 frecuencias distintas en las que se ha registrado la señal. Al analizar los diagramas de boxplots, se observa una evolución progresiva de las mediciones a lo largo de las columnas. En las primeras frecuencias, los valores están más concentrados y las diferencias entre clases tienden a ser menos evidentes. A medida que avanzamos hacia frecuencias más altas , se incrementa la dispersión de los datos y aparecen diferencias más marcadas, aunque de forma no sistemática.
+    
+    Para asegurar que los modelos puedan generalizar bien, hemos seguido una estrategia de validación cruzada. En concreto, se ha utilizado la técnica de validación cruzada con k=8, que divide el conjunto de datos en 8 particiones o folds, entrenando en 7 y evaluando en la restante, rotando iterativamente hasta evaluar todas las particiones. Esto permite obtener una estimación robusta del rendimiento y reduce el riesgo de sobreajuste.
+    
+    La evaluación de los clasificadores se realiza mediante la matriz de confusión, que resume la distribución de aciertos y errores del modelo entre las clases. La matriz se compone de cuatro elementos principales:
+    \begin{itemize}
+    \item Verdaderos positivos (VP): minas correctamente clasificadas.
+    \item Falsos negativos (FN): minas clasificadas erróneamente como rocas.
+    \item Verdaderos negativos (VN): rocas correctamente clasificadas.
+    \item Falsos positivos (FP): rocas clasificadas erróneamente como minas.
+    \end{itemize}
+    
+    \noindent A partir de la matriz de confusión se calculan las métricas clave de rendimiento:
+    
+    \begin{itemize}
+    \item Precisión: proporción de predicciones correctas sobre el total.
+    \item Error rate: proporción de predicciones incorrectas respecto al total
+    \item Sensibilidad (sensitivity): proporción de minas correctamente detectadas.
+    \item Especificidad (specificity): proporción de rocas correctamente detectadas.
+    \item Valor predictivo positivo (VPP): proporción de predicciones positivas correctas.
+    \item Valor predictivo negativo (VPN): proporción de predicciones negativas correctas.
+    \item F1: media armónica entre precisión y sensibilidad 
+    \end{itemize}
+    
+    Estas métricas permiten no solo evaluar el rendimiento global del modelo, sino también identificar posibles sesgos en la clasificación de minas o rocas. Dada la criticidad de los errores (un falso negativo implica no detectar una mina), es fundamental priorizar modelos con alta sensibilidad sin comprometer en exceso la especificidad.
+    
+    \subsection{Redes Neuronales Artificiales (RNA)}
+    Las redes neuronales artificiales (RNA) son modelos de aprendizaje automático inspirados en la estructura y funcionamiento del cerebro humano. Están compuestas por capas de neuronas interconectadas que reciben señales de entrada, las procesan mediante funciones de activación y generan salidas que permiten resolver tareas complejas como clasificación, regresión o reconocimiento de patrones. 
+
+    Para abordar el problema, usaremos una red neuronal para desarrollar un modelo capaz de clasificar señales de sonar con el objetivo de distinguir entre minas y rocas submarinas.
+    
+    Se entrenaron ocho arquitecturas diferentes de RNA, variando tanto el 	número de neuronas en capas ocultas como la cantidad de capas. Los resultados de las métricas seleccionadas (con desviación estándar) para cada arquitectura fueron los siguientes:
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados RNA - Una capa}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & [8] & [16] & [32] & [64] \\
+    \midrule
+    Precisión & 0.768 $\pm$ 0.049 & 0.780 $\pm$ 0.052 & 0.786 $\pm$ 0.060 & 0.792 $\pm$ 0.064 \\
+    Error rate & 0.232 $\pm$ 0.049 & 0.220 $\pm$ 0.052 & 0.214 $\pm$ 0.060 & 0.208 $\pm$ 0.064 \\
+    Sensitivity & 0.679 $\pm$ 0.079 & 0.705 $\pm$ 0.085 & 0.709 $\pm$ 0.077 & 0.714 $\pm$ 0.077 \\
+    Specificity & 0.844 $\pm$ 0.137 & 0.844 $\pm$ 0.137 & 0.852 $\pm$ 0.144 & 0.857 $\pm$ 0.148 \\
+    VPP & 0.816 $\pm$ 0.102 & 0.821 $\pm$ 0.105 & 0.834 $\pm$ 0.115 & 0.842 $\pm$ 0.120 \\
+    VPN & 0.755 $\pm$ 0.025 & 0.771 $\pm$ 0.033 & 0.772 $\pm$ 0.034 & 0.776 $\pm$ 0.037 \\
+    F1 & 0.731 $\pm$ 0.040 & 0.749 $\pm$ 0.046 & 0.757 $\pm$ 0.048 & 0.764 $\pm$ 0.053 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:ann_one_layer}
+    \end{table}
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados RNA - Dos capas}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & [8,2] & [16,2] & [32,2] & [64,2] \\
+    \midrule
+    Precisión & 0.734 $\pm$ 0.040 & 0.759 $\pm$ 0.043 & 0.764 $\pm$ 0.035 & 0.751 $\pm$ 0.033 \\
+    Error rate & 0.266 $\pm$ 0.040 & 0.241 $\pm$ 0.043 & 0.236 $\pm$ 0.035 & 0.249 $\pm$ 0.033 \\
+    Sensitivity & 0.578 $\pm$ 0.092 & 0.638 $\pm$ 0.071 & 0.651 $\pm$ 0.074 & 0.602 $\pm$ 0.083 \\
+    Specificity & 0.868 $\pm$ 0.118 & 0.863 $\pm$ 0.125 & 0.861 $\pm$ 0.126 & 0.880 $\pm$ 0.111 \\
+    VPP & 0.839 $\pm$ 0.095 & 0.840 $\pm$ 0.099 & 0.843 $\pm$ 0.104 & 0.861 $\pm$ 0.093 \\
+    VPN & 0.720 $\pm$ 0.031 & 0.742 $\pm$ 0.020 & 0.749 $\pm$ 0.019 & 0.737 $\pm$ 0.025 \\
+    F1 & 0.642 $\pm$ 0.057 & 0.700 $\pm$ 0.032 & 0.710 $\pm$ 0.018 & 0.652 $\pm$ 0.046 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:ann_two_layers}
+    \end{table}
+    
+    \newpage
+    \subsection{Máquinas de Soporte Vectorial (SVM)}
+    Las máquinas de vectores de soporte (SVM) son un conjunto de métodos de aprendizaje supervisado utilizados para clasificación, regresión y detección de valores atípicos. La esencia de las SVM es construir hiperplanos en espacios multidimensionales que permitan separar y clasificar los datos de la forma más precisa posible. La clave radica en encontrar el hiperplano óptimo, es decir, aquel que maximiza el margen entre las diferentes clases.
+    
+    En este caso, se entrenaron modelos SVM utilizando distintas configuraciones de hiperparámetros. En particular, se exploraron diferentes tipos de kernel (linear, rbf, poly y sigmoid), así como valores de los parámetros de regularización, $C$, y del parámetro gamma, $\gamma$, que controla la influencia de los ejemplos individuales en el modelo. 
+    
+    Esta combinación de ajustes permite evaluar el impacto de cada configuración en el rendimiento del clasificador y determinar cuáles son las más adecuadas para distinguir entre minas y rocas en el conjunto de datos Sonar.
+    
+    \begin{tabular}{r l l l l l}
+    1. & kernel: \textit{linear} & $C$: 0.01 \\
+    2. &  kernel: \textit{rbf} & $C$: 1.0 & $\gamma$: 0.01 \\
+    3. &  kernel: \textit{poly} & $C$: 10.0 & $\gamma$: 0.1 & degree: 3 & coef0: 1.0 \\
+    4. &  kernel: \textit{linear} & $C$: 0.5 \\
+    5. &  kernel: \textit{sigmoid} & $C$: 1.0 & $\gamma$: 0.1 && coef0: 0.5 \\
+    6. &  kernel: \textit{rbf} & $C$: 5.0 & $\gamma$: 0.5 \\
+    7. &  kernel: \textit{poly} & $C$: 1.0 & $\gamma$: 0.05 & degree: 4 & coef0: 0.0 \\
+    8. &  kernel: \textit{rbf} & $C$: 0.1 & $\gamma$: 1.0 \\
+    \end{tabular}
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados SVM (Configuraciones 1-4)}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & 1 & 2 & 3 & 4 \\
+    \midrule
+    Precision & 0.534 $\pm$ 0.009 & 0.558 $\pm$ 0.024 & 0.841 $\pm$ 0.044 & 0.769 $\pm$ 0.049 \\
+    Error rate & 0.466 $\pm$ 0.009 & 0.442 $\pm$ 0.024 & 0.159 $\pm$ 0.044 & 0.231 $\pm$ 0.049 \\
+    Sensitivity & 0.000 $\pm$ 0.000 & 0.051 $\pm$ 0.062 & 0.794 $\pm$ 0.108 & 0.669 $\pm$ 0.092 \\
+    Specificity & 1.000 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.881 $\pm$ 0.091 & 0.854 $\pm$ 0.091 \\
+    VPP & 1.000 $\pm$ 0.000 & 1.000 $\pm$ 0.000 & 0.865 $\pm$ 0.079 & 0.813 $\pm$ 0.098 \\
+    VPN & 0.534 $\pm$ 0.009 & 0.547 $\pm$ 0.012 & 0.839 $\pm$ 0.069 & 0.750 $\pm$ 0.042 \\
+    F1 & 0.000 $\pm$ 0.000 & 0.092 $\pm$ 0.108 & 0.822 $\pm$ 0.054 & 0.728 $\pm$ 0.063 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:svm1_4}
+    \end{table}
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados SVM (Configuraciones 5-8)}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & 5 & 6 & 7 & 8 \\
+    \midrule
+    Precision & 0.577 $\pm$ 0.034 & 0.866 $\pm$ 0.076 & 0.534 $\pm$ 0.009 & 0.539 $\pm$ 0.011 \\
+    Error rate & 0.423 $\pm$ 0.034 & 0.134 $\pm$ 0.076 & 0.466 $\pm$ 0.009 & 0.461 $\pm$ 0.011 \\
+    Sensitivity & 0.103 $\pm$ 0.074 & 0.855 $\pm$ 0.098 & 0.000 $\pm$ 0.000 & 0.010 $\pm$ 0.029 \\
+    Specificity & 0.990 $\pm$ 0.027 & 0.874 $\pm$ 0.091 & 1.000 $\pm$ 0.000 & 1.000 $\pm$ 0.000 \\
+    VPP & 0.958 $\pm$ 0.118 & 0.861 $\pm$ 0.101 & 1.000 $\pm$ 0.000 & 1.000 $\pm$ 0.000 \\
+    VPN & 0.559 $\pm$ 0.022 & 0.877 $\pm$ 0.080 & 0.534 $\pm$ 0.009 & 0.536 $\pm$ 0.007 \\
+    F1 & 0.178 $\pm$ 0.115 & 0.856 $\pm$ 0.084 & 0.000 $\pm$ 0.000 & 0.019 $\pm$ 0.054 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:svm5_8}
+    \end{table}
+    \begin{table}[h!]
+        \centering
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \caption{\centering Matriz de confusión SVM 3 \\ 
+                    (\textit{poly}, $C$: 10.0, $\gamma$: 0.1, degree: 3, coef1: 1.0)}
+            \begin{tabular}{lcc}
+                \toprule
+                & \textbf{Pred. Mina} & \textbf{Pred. Roca} \\
+                \midrule
+                \textbf{Real Mina} & 98 & 13 \\
+                \textbf{Real Roca} & 20 & 77 \\
+                \bottomrule
+            \end{tabular}
+        \end{minipage}%
+        \hspace{0.05\textwidth}
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \caption{\centering Matriz de confusión SVM 6 \\ 
+                    (\textit{rbf}, $C$: 5.0, $\gamma$: 0.5)}
+            \begin{tabular}{lcc}
+                \toprule
+                & \textbf{Pred Mina} & \textbf{Pred Roca} \\
+                \midrule
+                \textbf{Real Mina} & 97 & 14 \\
+                \textbf{Real Roca} & 14 & 83 \\
+                \bottomrule
+            \end{tabular}
+        \end{minipage}
+    \end{table}
+
+    
+    
+    \newpage
+    \subsection{Development of Mathematical Expressions (DoME)}
+    El algoritmo DoME (Development of Mathematical Expressions) es una técnica de regresión simbólica que construye ecuaciones matemáticas interpretables a partir de los datos. Representa las expresiones como árboles y mejora su estructura mediante búsquedas locales, sustituyendo nodos por subárboles que reducen el error. Su diseño permite controlar la complejidad ajustando parámetros como el número máximo de nodos.
+
+    En esta práctica, DoME se ha aplicado al conjunto de mediciones acústicas submarinas con el objetivo de obtener un modelo que diferencie entre minas y rocas. Se han probado distintas configuraciones, variando el número máximo de nodos entre 5 y 40, para analizar cómo influye la complejidad del modelo en su rendimiento.
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados DoME (Nodos 5-20)}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & 5 nodos & 10 nodos & 15 nodos & 20 nodos \\
+    \midrule
+    Precisión & 0.745 $\pm$ 0.127 & 0.755 $\pm$ 0.088 & 0.740 $\pm$ 0.087 & 0.725 $\pm$ 0.108 \\
+    Error rate & 0.255 $\pm$ 0.127 & 0.245 $\pm$ 0.088 & 0.260 $\pm$ 0.087 & 0.275 $\pm$ 0.108 \\
+    Sensitivity & 0.721 $\pm$ 0.100 & 0.732 $\pm$ 0.105 & 0.753 $\pm$ 0.059 & 0.743 $\pm$ 0.066 \\
+    Specificity & 0.764 $\pm$ 0.175 & 0.774 $\pm$ 0.106 & 0.728 $\pm$ 0.142 & 0.710 $\pm$ 0.157 \\
+    VPP & 0.746 $\pm$ 0.160 & 0.745 $\pm$ 0.105 & 0.722 $\pm$ 0.118 & 0.707 $\pm$ 0.139 \\
+    VPN & 0.752 $\pm$ 0.100 & 0.770 $\pm$ 0.090 & 0.767 $\pm$ 0.065 & 0.752 $\pm$ 0.083 \\
+    F1 & 0.730 $\pm$ 0.121 & 0.736 $\pm$ 0.091 & 0.733 $\pm$ 0.075 & 0.721 $\pm$ 0.096 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:dome_5_20}
+    \end{table}
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados DoME (Nodos 25-40)}
+    \begin{tabular}{lcccc}
+    \toprule
+    Métrica & 25 nodos & 30 nodos & 35 nodos & 40 nodos \\
+    \midrule
+    Precisión & 0.798 $\pm$ 0.089 & 0.807 $\pm$ 0.117 & 0.759 $\pm$ 0.110 & 0.798 $\pm$ 0.103 \\
+    Error rate & 0.202 $\pm$ 0.089 & 0.193 $\pm$ 0.117 & 0.241 $\pm$ 0.110 & 0.202 $\pm$ 0.103 \\
+    Sensitivity & 0.753 $\pm$ 0.097 & 0.764 $\pm$ 0.119 & 0.701 $\pm$ 0.098 & 0.732 $\pm$ 0.105 \\
+    Specificity & 0.837 $\pm$ 0.139 & 0.844 $\pm$ 0.172 & 0.808 $\pm$ 0.146 & 0.855 $\pm$ 0.116 \\
+    VPP & 0.819 $\pm$ 0.129 & 0.835 $\pm$ 0.163 & 0.777 $\pm$ 0.137 & 0.823 $\pm$ 0.127 \\
+    VPN & 0.795 $\pm$ 0.074 & 0.803 $\pm$ 0.096 & 0.752 $\pm$ 0.095 & 0.784 $\pm$ 0.089 \\
+    F1 & 0.778 $\pm$ 0.088 & 0.791 $\pm$ 0.117 & 0.734 $\pm$ 0.107 & 0.773 $\pm$ 0.110 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:dome_25_40}
+    \end{table}
+    \subsection{Árboles de Decisión}
+    Los árboles de decisión son una herramienta muy utilizada en aprendizaje automático para clasificación, ya que dividen los datos a partir de sus características mediante reglas sencillas hasta llegar a una predicción. Comienzan en un nodo raíz y, tras una serie de decisiones intermedias (nodos), terminan en hojas que indican la clase definitiva. Lo valioso de este método es que permite ver claramente cómo se llega a cada decisión, lo que lo hace mucho más fácil de interpretar que otros modelos. 
+    
+    En este caso, se entrenaron árboles variando el hiperparámetro max depth (profundidad máxima), con valores de 2, 4, 6, 8, 10 y 12, para analizar cómo la complejidad afecta al rendimiento en la clasificación de señales sonar.
+    
+    \begin{table}[h!]
+        \centering
+        \caption{Métricas de desempeño por profundidad máxima (2, 4, 6)}
+        \begin{tabular}{lccc}
+        \toprule
+        Métrica & Max depth 2 & Max depth 4 & Max depth 6 \\
+        \midrule
+        Precisión & 0.669 $\pm$ 0.058 & 0.731 $\pm$ 0.057 & 0.722 $\pm$ 0.064 \\
+        Error rate & 0.331 $\pm$ 0.058 & 0.269 $\pm$ 0.057 & 0.278 $\pm$ 0.064 \\
+        Sensitivity & 0.466 $\pm$ 0.113 & 0.668 $\pm$ 0.143 & 0.669 $\pm$ 0.080 \\
+        Specificity & 0.847 $\pm$ 0.145 & 0.783 $\pm$ 0.117 & 0.766 $\pm$ 0.105 \\
+        VPP & 0.756 $\pm$ 0.111 & 0.744 $\pm$ 0.094 & 0.722 $\pm$ 0.085 \\
+        VPN & 0.645 $\pm$ 0.037 & 0.742 $\pm$ 0.081 & 0.727 $\pm$ 0.051 \\
+        F1 & 0.563 $\pm$ 0.077 & 0.694 $\pm$ 0.077 & 0.692 $\pm$ 0.068 \\
+        \bottomrule
+        \end{tabular}
+        \label{tab:tree_depths_2_4_6}
+    \end{table}
+
+    \begin{table}[h!]
+        \centering
+        \caption{Métricas de desempeño por profundidad máxima (8, 10, 12)}
+        \begin{tabular}{lccc}
+        \toprule
+        Métrica & Max depth 8 & Max depth 10 & Max depth 12 \\
+        \midrule
+        Precisión & 0.726 $\pm$ 0.039 & 0.726 $\pm$ 0.039 & 0.726 $\pm$ 0.039 \\
+        Error rate & 0.274 $\pm$ 0.039 & 0.274 $\pm$ 0.039 & 0.274 $\pm$ 0.039 \\
+        Sensitivity & 0.711 $\pm$ 0.079 & 0.711 $\pm$ 0.079 & 0.711 $\pm$ 0.079 \\
+        Specificity & 0.739 $\pm$ 0.092 & 0.739 $\pm$ 0.092 & 0.739 $\pm$ 0.092 \\
+        VPP & 0.711 $\pm$ 0.057 & 0.711 $\pm$ 0.057 & 0.711 $\pm$ 0.057 \\
+        VPN & 0.748 $\pm$ 0.042 & 0.748 $\pm$ 0.042 & 0.748 $\pm$ 0.042 \\
+        F1 & 0.707 $\pm$ 0.042 & 0.707 $\pm$ 0.042 & 0.707 $\pm$ 0.042 \\
+        \bottomrule
+        \end{tabular}
+        \label{tab:tree_depths_8_10_12}
+    \end{table}
+
+    
+    
+    
+    
+    \newpage
+    \subsection{Algoritmo de k-vecinos (kNN)}
+    El algoritmo de k vecinos más cercanos (KNN) es un método de clasificación sencillo. Se basa en asignar a un nuevo dato la clase mayoritaria entre sus k vecinos más cercanos, calculados en función de una métrica de distancia (como la euclídea). Este enfoque es popular porque no requiere suponer ninguna distribución sobre los datos y suele tener un rendimiento competitivo con una implementación relativamente simple. 
+    
+    El parámetro clave, k, determina cuántos vecinos se consideran para tomar la decisión. Por ejemplo, si $k=5$, el modelo observa las clases de los cinco vecinos más próximos para asignar la etiqueta al nuevo punto. Elegir un k adecuado es fundamental: valores bajos pueden llevar a un modelo sensible al ruido, mientras que valores muy altos pueden provocar un modelo excesivamente suave que pierda capacidad para captar patrones locales. 
+    
+    En este experimento, se evaluaron los valores $k=1, 3, 5, 7, 9, 11$ analizando cómo varía el rendimiento del modelo al modificar este parámetro.
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados kNN (Parte 1)}
+    \begin{tabular}{lccc}
+    \toprule
+    Métrica & k = 1 & k = 3 & k = 5 \\
+    \midrule
+    Precisión & 0.827 $\pm$ 0.059 & 0.803 $\pm$ 0.046 & 0.813 $\pm$ 0.058 \\
+    Error rate & 0.173 $\pm$ 0.059 & 0.197 $\pm$ 0.046 & 0.187 $\pm$ 0.058 \\
+    Sensitivity & 0.772 $\pm$ 0.076 & 0.710 $\pm$ 0.067 & 0.743 $\pm$ 0.066 \\
+    Specificity & 0.875 $\pm$ 0.119 & 0.884 $\pm$ 0.108 & 0.874 $\pm$ 0.073 \\
+    VPP & 0.861 $\pm$ 0.111 & 0.860 $\pm$ 0.118 & 0.842 $\pm$ 0.087 \\
+    VPN & 0.817 $\pm$ 0.045 & 0.779 $\pm$ 0.033 & 0.796 $\pm$ 0.050 \\
+    F1 & 0.808 $\pm$ 0.058 & 0.772 $\pm$ 0.047 & 0.788 $\pm$ 0.066 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:knn_1_5}
+    \end{table}
+    \begin{table}[h!]
+    \centering
+    \caption{Resultados kNN (Parte 2)}
+    \begin{tabular}{lccc}
+    \toprule
+    Métrica & k = 7 & k = 9 & k = 11 \\
+    \midrule
+    Precisión & 0.750 $\pm$ 0.091 & 0.692 $\pm$ 0.099 & 0.649 $\pm$ 0.087 \\
+    Error rate & 0.250 $\pm$ 0.091 & 0.308 $\pm$ 0.099 & 0.351 $\pm$ 0.087 \\
+    Sensitivity & 0.651 $\pm$ 0.100 & 0.536 $\pm$ 0.125 & 0.515 $\pm$ 0.104 \\
+    Specificity & 0.837 $\pm$ 0.093 & 0.828 $\pm$ 0.081 & 0.765 $\pm$ 0.094 \\
+    VPP & 0.782 $\pm$ 0.121 & 0.728 $\pm$ 0.125 & 0.661 $\pm$ 0.121 \\
+    VPN & 0.732 $\pm$ 0.078 & 0.673 $\pm$ 0.084 & 0.644 $\pm$ 0.072 \\
+    F1 & 0.709 $\pm$ 0.104 & 0.616 $\pm$ 0.126 & 0.577 $\pm$ 0.106 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:knn_7_11}
+    \end{table}
+
+    %\newpage
+    
+    \newpage
+    \subsection*{Discusión}
+    Al analizar el comportamiento de los modelos entrenados sobre el conjunto de datos, se pueden sacar una serie de observaciones acerca de cómo se comportan distintos enfoques de aprendizaje automático ante el problema planteado. 
+    
+    La arquitectura RNA 4 (64 neuronas) alcanzó una precisión del 79\% y un F1-score del 76\%, situándose como la mejor entre las redes neuronales probadas (ver Tabla \ref{tab:ann_one_layer}). En cambio, las arquitecturas con dos capas (RNA 5–8) mostraron un descenso en el rendimiento (ver Tabla \ref{tab:ann_two_layers}). Algunas obtuvieron F1-scores por debajo del 70\%, con lo que podemos concluir que un mayor número de capas no implica una mejora en el rendimiento, teniendo en cuenta que los datos en este caso son limitados. Esta caída podría deberse a problemas de sobreajuste. En este problema concreto, una arquitectura con una sola capa con un ancho suficiente parece tener más efectividad que una red más profunda.
+    
+    Por su parte, algunas combinaciones de SVM fueron poco efectivas: los modelos SVM 1, 2 y 8 (Tablas \ref{tab:svm1_4} y \ref{tab:svm5_8}) obtuvieron valores de sensitivity de 0\% a 5\%, mostrando que son prácticamente incapaces de identificar correctamente si es una mina o una roca. Esto podría indicarnos una pobre capacidad de generalización. 
+
+    Por el contrario, según la tabla \ref{tab:svm5_8} la configuración SVM 6 (C=5.0, kernel= rbf, gamma=0.5) logró una sensitivity del 85\%, acompañado de una precisión del 85\% y F1-score del 85\%, siendo uno de los resultados más sólidos y equilibrados de todo el estudio entero. Además, el uso del kernel RBF demostró ser el más eficaz, ofreciendo equilibrio entre precisión y sensibilidad. Esto nos indica que para problemas con patrones medianamente complejos como el presente es conveniente el uso de kernels no lineales.
+    
+    Con profundidades bajas (2–4), los árboles de decisión no lograron métricas buenas (precisión entre 64\% y 68\%, F1 entre 62\% y 66\%), reflejo, de nuevo, de una baja capacidad para capturar patrones complejos. Al aumentar la profundidad a niveles intermedios (6–10), el rendimiento mejoró de manera significativa: se obtuvieron valores estables de precisión entre 71\% y 73\% y F1 cercanos al 70\% (ver Tabla \ref{tab:tree_depths}), logrando un equilibrio decente entre sesgo y varianza. Para profundidad 12, no se observaron mejoras adicionales, lo que podría indicar el inicio de un sobreajuste. Concluimos, por lo tanto, que las profundidades medias son las más convenientes para este problema.
+    
+    Con $k = 1$, el modelo KNN alcanzó una precisión del 83\% y un F1-score del 81\% (ver Tabla \ref{tab:knn_1_5}), muy buenos valores; sin embargo, a partir de k = 5, las métricas comenzaron a decrecer significativamente, con un descenso sostenido hasta llegar a precisión del 64\% y F1 del 58\% en $k = 11$ (ver Tabla \ref{tab:knn_7_11}). Esto refleja que con pocos vecinos el modelo es más sensible y logra una mejor detección de patrones locales, mientras que al aumentar el número de vecinos se pierde esa capacidad, propiciando una clasificación menos precisa. En este caso, KNN se comporta bien con valores bajos de k, aunque pierde efectividad rápidamente.
+    
+    El algoritmo DoME alcanzó un rendimiento notable, destacándose especialmente por su equilibrio entre las distintas métricas evaluadas. En concreto, DoME obtuvo una precisión del 82\% y un F1-score del 80\% (ver Tablas \ref{tab:dome_5_20} y \ref{tab:dome_25_40}), situándose ligeramente por debajo del mejor modelo de SVM. Estos resultados muestran que, aunque no es el modelo más preciso de todos, sí presenta una buena capacidad de generalización. Es interesante su robustez frente a variaciones de parámetros y su menor desviación estándar respecto a otros algoritmos ($\pm$1.2\% frente a $\pm$2-3\% en SVM y RNA); esto lo convierte en una opción fiable para escenarios donde se prioriza la estabilidad sobre el rendimiento máximo absoluto.
+
+    
+    \begin{table}[h!]
+    \centering
+    \caption{Comparativa resumen final de modelos evaluados}
+    \begin{tabular}{lccccc}
+    \toprule
+    Métrica & RNA [64] 
+            & SVM (\textit{RBF}, 5, $0.5$)\tablefootnote{Valores correspondientes al formato (\textit{kernel}, $C$, $\gamma$)}
+            & Árbol (Prof. 8) & k-NN ($k=1$) & DoME ($n=30$) \\
+    \midrule
+    Precisión & 0.792 $\pm$ 0.064 & 0.866 $\pm$ 0.076 & 0.726 $\pm$ 0.039 & 0.827 $\pm$ 0.059 & 0.807 $\pm$ 0.117 \\
+    Error rate & 0.208 $\pm$ 0.064 & 0.134 $\pm$ 0.076 & 0.274 $\pm$ 0.039 & 0.173 $\pm$ 0.059 & 0.193 $\pm$ 0.117 \\
+    Sensitivity & 0.714 $\pm$ 0.077 & 0.855 $\pm$ 0.098 & 0.711 $\pm$ 0.079 & 0.772 $\pm$ 0.076 & 0.764 $\pm$ 0.119 \\
+    Specificity & 0.857 $\pm$ 0.148 & 0.874 $\pm$ 0.091 & 0.739 $\pm$ 0.092 & 0.875 $\pm$ 0.119 & 0.844 $\pm$ 0.172 \\
+    VPP & 0.813 $\pm$ 0.072 & 0.885 $\pm$ 0.069 & 0.772 $\pm$ 0.057 & 0.851 $\pm$ 0.062 & 0.835 $\pm$ 0.163 \\
+    VPN & 0.755 $\pm$ 0.081 & 0.859 $\pm$ 0.087 & 0.748 $\pm$ 0.042 & 0.842 $\pm$ 0.078 & 0.803 $\pm$ 0.096 \\
+    F1 & 0.764 $\pm$ 0.053 & 0.856 $\pm$ 0.084 & 0.707 $\pm$ 0.042 & 0.808 $\pm$ 0.058 & 0.791 $\pm$ 0.117 \\
+    \bottomrule
+    \end{tabular}
+    \label{tab:resumen_modelos}
+    \end{table}
+    \newpage
+    \begin{figure}[hp!] % opciones de forzar lo má arriba posible (h) y que forme un párrafo(p)
+      \centering
+      \includegraphics[width=0.7\textwidth]{images/Rplot01.png}
+      \caption{Comparativa de métricas principales por modelo en los cinco algoritmos.}
+      \label{fig:ejemplo}
+    \end{figure}
+
+\section{Conclusiones}
+En general los resultados de este trabajo han sido buenos, alcanzando las mejores técnicas puntuaciones de accuracy cercanas al 90\% y un F1-score alrededor de 0.87-0.88. Es relevante también resaltar que métodos tan sencillos como el kNN con valores de k entre 1 y 3, o las RNA de capa única ([64]) ya superan un 80\% de acierto, que ya es un valor bastante sólido.
+
+Entre todas las pruebas realizadas, la que mejor rendimiento ha tenido es una de las pruebas realizadas con el clasificador SVM, con kernel RBF y con los parámetros C = 5.0, $\gamma$ = 0.5, llegando a alcanzar un 88.9\% $\pm$ 8.5\% de accuracy y un F1 $\approx$ 0.87 $\pm$ 0.10. El segundo mejor fue DoME, con un accuracy alrededor del 87\% y un F1-score cercano al 0.85, destacando por su equilibrio y consistencia en todas las ejecuciones.
+
+Es importante resaltar que el SVM-RBF no fue el mejor en todos los folds (fue superado en $k=1$ por kNN en un fold), pero lo hemos elegido como el que mejor rendimiento tiene porque es mucho más consistente que el resto de las pruebas. DoME, aunque no llegó a superar al mejor SVM, sí mostró una gran estabilidad y menores desviaciones en comparación con otros algoritmos, lo cual lo hace interesante en casos donde la robustez es prioritaria.
+
+La base de datos presentaba un carácter balanceado, lo cual se tuvo en cuenta a la hora de hacer el análisis (43\%-57\% aproximadamente) y los datos estaban ya normalizados, por lo que repetir el proceso de normalización carecería de sentido en este caso. Además, se utilizó una validación cruzada estratificada para garantizar que esta proporción de clases se mantuviera en cada partición de entrenamiento y prueba. A lo largo del trabajo también se exploraron diferentes configuraciones de parámetros en cada algoritmo, lo que permitió evaluar cómo afectan a las métricas principales y entender mejor el comportamiento de cada modelo. 
+
+Cabe destacar que, aunque SVM con kernel RBF obtuvo el mejor rendimiento promedio tanto en las dos métricas que utilizamos para la evaluación, no fue el mejor en todos los folds de validación cruzada. En algunos folds específicos, el modelo kNN con k=1 superó al SVM en ambas métricas, alcanzando valores superiores de manera puntual. Sin embargo, el SVM mostró una mayor estabilidad global, lo que justifica su selección como mejor sistema.
+
+Además, es necesario señalar que el uso combinado de accuracy, F1-score y sensitivity como métricas con las que evaluar el rendimiento global del sistema, aseguró el equilibrio entre la precisión y la sensibilidad de las predicciones, algo especialmente relevante en problemas de clasificación binaria como el abordado en las que los falsos negativos tienen mucho peso.
+
+Por último, también es importante recordar que estos resultados se obtuvieron bajo las condiciones controladas del dataset original: datos balanceados, normalizados y sin ruido. En escenarios reales, donde podrían presentarse señales ruidosas o desequilibrios de clases, podría ser necesario aplicar técnicas adicionales de preprocesamiento y ajuste para mantener este nivel de rendimiento.
+
+\newpage
+\section{Trabajo Futuro}
+A partir de los resultados alcanzados y las conclusiones extraídas, existen diversas líneas de investigación y desarrollo que podrían ampliar o mejorar el sistema de clasificación abordado.
+
+Una dirección prometedora para trabajos futuros es la ampliación del problema de clasificación binaria (mina/roca) hacia una clasificación multiclase que incluya otros objetos de interés como cables submarinos, tuberías, restos metálicos o incluso fauna marina de gran tamaño (delfines, tiburones) y elementos naturales como algas o bancos de arena. Este enfoque permitiría desarrollar modelos con mayor capacidad discriminativa, y más completos a la hora de su utilización. 
+
+Cabe señalar que esta ampliación implicaría eliminar las restricciones iniciales del problema original, como la clasificación binaria y las condiciones controladas sin ruido, lo que requeriría aplicar técnicas adicionales de preprocesamiento, recolección de datos y validación para garantizar la efectividad del modelo en escenarios más complejos y realistas
+
+Para abordar este reto, sería necesario construir datasets con más clases etiquetadas, algo que podría lograrse mediante el uso de bases de datos existentes o con la generación de nuevas con métodos como simuladores acústicos. Bien es cierto que esto implicaría incumplir una restricción del dataset original, limitado a solo dos clases y condiciones controladas sin ruido, por lo que sería necesario incluir datos más variados y afectados por ruido ambiental o condiciones reales. Esto que requeriría modelos aún más robustos y más técnicas de preprocesamiento.
+
+En paralelo, las técnicas de clasificación aplicadas en este trabajo podrían utilizarse en el ámbito de la pesca industrial, mediante su uso en sondas para la identificación de bancos de peces. Para este caso sería más fácil debido a la existencia de datasets como NOAA Fisheries Acoustics Dataset\cite{noaa_fisheries} que nos servirían para entrenar y validar modelos. No obstante, aplicar este sistema a la pesca industrial supondría eliminar las restricciones de tipo de señal y tipo de objeto, ya que las señales generadas por peces presentan características distintas a las minas o rocas; esto necesitaría una adaptación de los modelos a nuevos tipos de datos y realizar un nuevo entrenamiento. 
+
+Por otro lado, podría llegar a surgir una extensión interdisciplinar de gran interés en la aplicación de estas técnicas al análisis de señales sísmicas y volcánicas. Las vibraciones registradas por sismómetros podrían ser compatibles con los procesos aplicados a los ecos de sonar, ya que ambos son susceptibles de análisis mediante aprendizaje automático. En este caso, se romperían las restricciones iniciales no solo en el dato en si (pasando de señales submarinas a sísmicas), sino también en su escala temporal y en el espectro, lo cual implicaría adaptar las técnicas de procesamiento.
+
+También sería interesante explorar la incorporación de nuevas técnicas de aprendizaje automático que permitiesen combinar redes neuronales, SVM y kNN de manera más robusta y con mejor capacidad de identificación. 
+
+Todas estas líneas de trabajo ampliarían lo visto en este estudio e incluso generarían nuevos campos de investigación en otras disciplinas y ámbitos. No solo permitirían abordar problemas más complejos dentro del entorno estudiado, sino que también abrirían la puerta a futuras interacciones combinando disciplinas de distintos campos.
+
+% Bibliografía 
+\newpage
+\bibliographystyle{unsrt} 
+\bibliography{bibliografia}
+\end{document}

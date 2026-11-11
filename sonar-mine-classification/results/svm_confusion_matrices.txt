@@ -1,0 +1,55 @@
+MATRICES DE CONFUSION DE SVM:
+% -----------------------------------------------------------
+% Cuadro 4 – Matrices de confusión (9-11)
+% -----------------------------------------------------------
+\begin{table}[h!]
+  \centering
+  \caption{Matrices de confusión para las configuraciones 9-11}
+  \label{tab:conf_svm9_11}
+
+  % ---------- SVM 9 ----------------------------------------
+  \begin{minipage}{0.30\textwidth}
+    \centering
+    \caption{\centering Matriz de confusión SVM 9\\
+              (\textit{linear}, $C$: 0.1)}
+    \begin{tabular}{lcc}
+      \toprule
+                  & \textbf{Pred.\ Mina} & \textbf{Pred.\ Roca} \\
+      \midrule
+      \textbf{Real Mina} & 96 & 15 \\
+      \textbf{Real Roca} & 43 & 54 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}%
+  \hspace{0.05\textwidth}
+  % ---------- SVM 10 ---------------------------------------
+  \begin{minipage}{0.30\textwidth}
+    \centering
+    \caption{\centering Matriz de confusión SVM 10\\
+              (\textit{rbf}, $C$: 1.0, $\gamma$: 0.05)}
+    \begin{tabular}{lcc}
+      \toprule
+                  & \textbf{Pred.\ Mina} & \textbf{Pred.\ Roca} \\
+      \midrule
+      \textbf{Real Mina} & 95 & 16 \\
+      \textbf{Real Roca} & 45 & 52 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}%
+  \hspace{0.05\textwidth}
+  % ---------- SVM 11 ---------------------------------------
+  \begin{minipage}{0.30\textwidth}
+    \centering
+    \caption{\centering Matriz de confusión SVM 11\\
+              (\textit{poly}, $C$: 5.0, $\gamma$: 0.1, grado: 3, coef0: 1.0)}
+    \begin{tabular}{lcc}
+      \toprule
+                  & \textbf{Pred.\ Mina} & \textbf{Pred.\ Roca} \\
+      \midrule
+      \textbf{Real Mina} & 97 & 14 \\
+      \textbf{Real Roca} & 21 & 76 \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}
+
+\end{table}
