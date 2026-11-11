@@ -39,6 +39,26 @@ them and how to reproduce the run.
 
 ---
 
+## Where this is meant to go
+
+The models here are the means, not the point. What interests me is the end of
+the chain: the **decision each piece of analysis supports**, and what adopting
+it is worth in money, time or risk.
+
+That is the same question an operation asks every day. The reasoning that picks
+a buy-or-wait threshold from a cost matrix is the reasoning that sets a safety
+stock, a reorder point or a service level; the asymmetric criterion that
+refuses to miss a mine is the one that refuses to miss a stockout or a failed
+delivery; the agent-based model that shows how fast something propagates
+through a network is a model of a distribution network as much as a social one.
+
+So the direction I am working towards is **business and industrial logistics**
+— operations, supply chain and planning — where the deliverable is not a score
+on a test set but an operating rule somebody can follow, with the cost of
+getting it wrong written down next to it.
+
+---
+
 ## Repository layout
 
 ```

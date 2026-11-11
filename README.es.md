@@ -40,6 +40,28 @@ bajarlos y cómo reproducir la ejecución.
 
 ---
 
+## Hacia dónde va esto
+
+Los modelos son el medio, no el objetivo. Lo que me interesa es el final de la
+cadena: la **decisión que sostiene cada análisis** y lo que vale adoptarla, en
+dinero, en tiempo o en riesgo.
+
+Esa es la misma pregunta que se hace una operación todos los días. El
+razonamiento que elige un umbral de comprar o esperar a partir de una matriz de
+costes es el que fija un stock de seguridad, un punto de pedido o un nivel de
+servicio; el criterio asimétrico que se niega a no detectar una mina es el que
+se niega a no detectar una rotura de stock o una entrega fallida; y el modelo
+basado en agentes que mide a qué velocidad se propaga algo por una red sirve
+igual para una red de distribución que para una red social.
+
+Así que la dirección en la que trabajo es la **logística empresarial e
+industrial** —operaciones, cadena de suministro y planificación—, donde lo que
+se entrega no es una métrica sobre un conjunto de test, sino una regla de
+operación que alguien pueda seguir, con el coste de equivocarse escrito al
+lado.
+
+---
+
 ## Estructura
 
 ```
