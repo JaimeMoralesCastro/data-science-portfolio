@@ -17,7 +17,7 @@ bajarlos y cómo reproducir la ejecución.
 
 | Proyecto | Qué responde | Stack |
 |---|---|---|
-| [**Predicción de bajadas de precio en vuelos**](flight-price-drop-prediction/) | Dada una búsqueda de vuelo, ¿bajará el precio al menos un 5 % en una semana? Cuatro modelos comparados sobre 6,1 M de búsquedas reales de Expedia, con el umbral de decisión elegido por dólares ahorrados y no por F1. | PySpark · MLlib · GBT · Parquet |
+| [**¿Compro o espero?**](buy-now-or-wait/) | Dada una búsqueda de vuelo, ¿bajará el precio al menos un 5 % en una semana? Cuatro modelos comparados sobre 6,1 M de búsquedas reales de Expedia, con el umbral de decisión elegido por dólares ahorrados y no por F1. | PySpark · MLlib · GBT · Parquet |
 | [**Clasificación de minas con sonar**](sonar-mine-classification/) | ¿Mina o roca? Cinco familias de modelos comparadas bajo un criterio de riesgo asimétrico, donde no detectar una mina cuesta mucho más que una falsa alarma. | Julia · SVM · RNA · k-NN · DoME |
 | [**Detección de lenguaje abusivo**](abusive-language-detection/) | ¿Aguanta un modelo de toxicidad entrenado con Wikipedia cuando le llega Twitter? Un diseño 3 × 3 de entrenamiento y evaluación responde que no del todo. | PyTorch · RoBERTa · Hugging Face |
 | [**Simulación de propagación de rumores**](rumor-spread-sir-simulation/) | ¿Cómo cambia la forma de la red la velocidad de un rumor? SIR basado en agentes sobre grafos libres de escala y de mundo pequeño. | Python · NetworkX · SIR |
@@ -43,10 +43,10 @@ bajarlos y cómo reproducir la ejecución.
 ## Estructura
 
 ```
-flight-price-drop-prediction/   pipeline de Spark, notebooks, métricas, memoria
-sonar-mine-classification/      scripts de Julia, dataset Sonar, matrices de confusión
-abusive-language-detection/     entrenamiento y evaluación de RoBERTa, resultados 3x3
-rumor-spread-sir-simulation/    modelo basado en agentes, gráficas, memoria
+buy-now-or-wait/              pipeline de Spark, notebooks, métricas, memoria
+sonar-mine-classification/    scripts de Julia, dataset Sonar, matrices de confusión
+abusive-language-detection/   entrenamiento y evaluación de RoBERTa, resultados 3x3
+rumor-spread-sir-simulation/  modelo basado en agentes, gráficas, memoria
 ```
 
 Cada proyecto tiene su propio `README.md` con requisitos, cómo conseguir los

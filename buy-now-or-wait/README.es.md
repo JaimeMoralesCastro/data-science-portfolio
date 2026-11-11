@@ -1,5 +1,6 @@
-# Predicción de bajadas de precio en vuelos
+# ¿Compro o espero?
 
+**Predicción de bajadas de precio en vuelos.**
 Práctica 1 de Aprendizaje Automático a Gran Escala. Jaime Morales Castro y Nicolás Pernas Gómez.
 
 Clasificación binaria con Spark MLlib: dada una búsqueda de vuelo, predice si el precio bajará al menos un 5 % en los siete días siguientes (ESPERAR) o no (COMPRAR YA).

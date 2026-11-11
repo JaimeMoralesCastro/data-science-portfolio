@@ -1,8 +1,9 @@
-# Flight price drop prediction
+# Buy Now or Wait
 
 **Should I buy this flight now, or wait?** Given a flight search, a binary
 classifier predicts whether the price will drop by at least 5 % within the next
-seven days (`WAIT`) or not (`BUY NOW`).
+seven days (`WAIT`) or not (`BUY NOW`) — and the threshold that decides is
+chosen in dollars, not in F1.
 
 Large-Scale Machine Learning (AAGE), Universidade da Coruña — Practical 1.
 Jaime Morales Castro and Nicolás Pernas Gómez.

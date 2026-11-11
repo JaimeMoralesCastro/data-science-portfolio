@@ -3,7 +3,7 @@ data/itineraries.csv
 data/*.parquet/
 data/corredor.parquet/
 data/dataset_modelado.parquet/
-flight-price-drop-prediction/data/
+buy-now-or-wait/data/
 abusive-language-detection/data/
 abusive-language-detection/models/
 

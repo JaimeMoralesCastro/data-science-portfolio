@@ -17,7 +17,7 @@ them and how to reproduce the run.
 
 | Project | What it answers | Stack |
 |---|---|---|
-| [**Flight price drop prediction**](flight-price-drop-prediction/) | Given a flight search, will the price drop at least 5 % within a week? Four models compared on 6.1 M real Expedia searches, with the decision threshold chosen by dollars saved instead of F1. | PySpark · MLlib · GBT · Parquet |
+| [**Buy Now or Wait**](buy-now-or-wait/) | Given a flight search, will the price drop at least 5 % within a week? Four models compared on 6.1 M real Expedia searches, with the decision threshold chosen by dollars saved instead of F1. | PySpark · MLlib · GBT · Parquet |
 | [**Sonar mine classification**](sonar-mine-classification/) | Mine or rock? Five model families compared under an asymmetric risk criterion, where a missed mine costs far more than a false alarm. | Julia · SVM · ANN · k-NN · DoME |
 | [**Abusive language detection**](abusive-language-detection/) | Does a toxicity model trained on Wikipedia survive Twitter? A 3 × 3 train/test design says: not entirely. | PyTorch · RoBERTa · Hugging Face |
 | [**Rumor spread simulation**](rumor-spread-sir-simulation/) | How does network shape change the speed of a rumor? Agent-based SIR on scale-free vs small-world graphs. | Python · NetworkX · SIR |
@@ -42,10 +42,10 @@ them and how to reproduce the run.
 ## Repository layout
 
 ```
-flight-price-drop-prediction/   Spark pipeline, notebooks, metrics, report
-sonar-mine-classification/      Julia scripts, Sonar dataset, confusion matrices
-abusive-language-detection/     RoBERTa training and evaluation, 3x3 results
-rumor-spread-sir-simulation/    Agent-based model, plots, report
+buy-now-or-wait/              Spark pipeline, notebooks, metrics, report
+sonar-mine-classification/    Julia scripts, Sonar dataset, confusion matrices
+abusive-language-detection/   RoBERTa training and evaluation, 3x3 results
+rumor-spread-sir-simulation/  Agent-based model, plots, report
 ```
 
 Each project has its own `README.md` with requirements, how to obtain the data
